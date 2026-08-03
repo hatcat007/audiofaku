@@ -164,3 +164,6 @@ help:
 	@echo "  ci            - Run full CI checks"
 	@echo "  docs          - Show documentation"
 	@echo "  help          - Show this help message"
+# Offline robustness benchmark (mmm.research)
+bench:
+	python -m mmm.research --variants preserving,paranoid,max,stealth_plus

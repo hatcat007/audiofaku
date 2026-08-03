@@ -349,6 +349,16 @@ class FingerprintRemover:
         """Calculate quality metrics comparing original and cleaned audio"""
         metrics = {}
 
+        # Align dimensionality: mono input may arrive as (n, 1) while
+        # cleaned is (n,).  Subtract on equal shapes to avoid an accidental
+        # (n, n) broadcast (which would exhaust memory on real clips).
+        original = np.asarray(original)
+        cleaned = np.asarray(cleaned)
+        if original.ndim == 2 and original.shape[1] == 1:
+            original = original[:, 0]
+        if cleaned.ndim == 2 and cleaned.shape[1] == 1:
+            cleaned = cleaned[:, 0]
+
         # Signal-to-Noise Ratio (SNR)
         noise = original - cleaned
         signal_power = np.mean(original**2)

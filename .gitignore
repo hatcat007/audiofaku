@@ -188,3 +188,6 @@ output/
 results/
 reports/
 analysis/
+
+# Benchmark harness outputs (mmm.research)
+bench_results/

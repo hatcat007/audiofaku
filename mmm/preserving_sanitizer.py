@@ -14,9 +14,10 @@ import soundfile as sf
 import shutil
 from numpy.fft import fft, ifft, fftfreq
 from scipy.signal import butter, filtfilt
-import random
+
 
 logger = logging.getLogger(__name__)
+
 
 def _configure_thread_counts() -> None:
     """Set thread counts for numeric libraries. Call once before heavy computation."""
@@ -103,7 +104,11 @@ def preserving_sanitize(
     phase_start = time.time()
 
     # Copy file first
-    shutil.copy2(input_file, output_file)
+    try:
+        shutil.copy2(input_file, output_file)
+    except OSError as exc:
+        print(f"   ❌ Failed to copy input file: {exc}")
+        return {"success": False, "error": f"Failed to copy input file: {exc}"}
 
     # Remove metadata using mutagen
     try:
@@ -1435,13 +1440,21 @@ def _apply_mfcc_perturbation(
             if np.isfinite(cap) and cap > 0:
                 S_modified = np.clip(S_modified, 0.0, cap * 6.0)
 
-            reconstructed = librosa.feature.inverse.mel_to_audio(
-                S_modified,
-                sr=sr,
-                n_fft=n_fft,
+            # Invert the mel spectrogram via a least-squares pseudo-inverse
+            # of the mel filter bank, then Griffin-Lim.  (librosa's
+            # mel_to_stft path uses an NNLS/L-BFGS-B solver whose workspace
+            # allocation grows to tens of GiB on real-length clips; the
+            # pseudo-inverse is a bounded, well-understood approximation.)
+            mel_basis = librosa.filters.mel(sr=sr, n_fft=n_fft, n_mels=n_mels)
+            S_est = np.linalg.pinv(mel_basis) @ S_modified  # (bins, frames)
+            S_est = np.maximum(S_est, 0.0)
+            reconstructed = librosa.griffinlim(
+                np.sqrt(S_est + 1e-10),
+                n_iter=16 if not paranoid_mode else 24,
                 hop_length=hop_length,
                 length=n,
-                n_iter=16 if not paranoid_mode else 24,
+                n_fft=n_fft,
+                window="hann",
             )
             reconstructed = np.nan_to_num(
                 reconstructed, nan=0.0, posinf=0.0, neginf=0.0
@@ -1453,6 +1466,42 @@ def _apply_mfcc_perturbation(
             rec_rms = np.sqrt(np.mean(reconstructed**2))
             if src_rms > 0 and rec_rms > 0:
                 reconstructed = reconstructed * (src_rms / rec_rms)
+
+            # Shape the reconstruction's mean spectrum to match the source.
+            # Mel-domain inversion smears sparse spectra into broadband mush;
+            # without this match, even a low blend ratio injects a loud
+            # noise floor.  Matching the envelope keeps the perturbed MFCC
+            # *trajectories* (the intended effect) while preserving timbre.
+            # Bins where the source has negligible energy are hard-gated to
+            # zero so the reconstruction cannot add content that is not in
+            # the original.
+            try:
+                S_src = np.abs(
+                    librosa.stft(source, n_fft=n_fft, hop_length=hop_length)
+                )
+                S_rec = np.abs(
+                    librosa.stft(reconstructed, n_fft=n_fft, hop_length=hop_length)
+                )
+                env_src = S_src.mean(axis=1) + 1e-10
+                env_rec = S_rec.mean(axis=1) + 1e-10
+                gain = np.clip(env_src / env_rec, 0.05, 20.0)
+                # Soft gate: zero out bins below ~ -26 dB relative to the
+                # source's strongest bin (mel inversion hallucinates energy
+                # in silent regions; it must not be blended back in).
+                gate = np.clip(env_src / (env_src.max() + 1e-12) / 0.05, 0.0, 1.0)
+                S_rec_matched = S_rec * (gain * gate)[:, None]
+                reconstructed = librosa.istft(
+                    S_rec_matched * np.exp(1j * np.angle(S_rec)),
+                    hop_length=hop_length,
+                    length=n,
+                )
+            except Exception as e:
+                logger.warning(
+                    "MFCC spectral envelope matching failed on channel %d (%s); "
+                    "proceeding with unshaped reconstruction",
+                    ch,
+                    e,
+                )
 
             blended = (1 - blend) * source + blend * reconstructed
             output[:, ch] = np.nan_to_num(blended, nan=0.0, posinf=0.0, neginf=0.0)
@@ -1482,7 +1531,9 @@ def main():
     if result["success"]:
         print(f"\n✨ Preserving sanitization complete!")
         print(f"   Audio quality: PRESERVED")
-        print(f"   Effectiveness: {result['stats']['effectiveness']:.1f}%")
+        stats = result.get("stats", {})
+        print(f"   Processing: {stats.get('processing_time', 0.0):.1f}s "
+              f"({stats.get('processing_speed', '?')})")
     else:
         print(
             f"\n💥 Preserving sanitization failed: {result.get('error', 'Unknown error')}"
