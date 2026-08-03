@@ -70,11 +70,51 @@ Outputs under `bench_results/`:
 5. **Interpretation & limitations** — surrogate caveats.
 6. **AI Disclosure Annex** — SOW §7 log of AI tool usage.
 
+## Calibrated proxy v2 (SH-family) and stage ablation
+
+`proxy_v2.py` implements the calibrated proxy built on the feature family
+the SubmitHub checker itself documents (v3 engineering blog + SONICS paper,
+ICLR 2025):
+
+- **Basic spectral**: flatness, rolloff, RMS, ZCR, MFCC statistics
+- **Harmonic**: phase coherence, band ratios, harmonic
+  consistency/stability, pitch transition rate, harmonic complexity,
+  vocals/music ratio (crude approximation — labeled)
+- **Long-range** (SONICS): section correlation/variation over 60/120/180 s
+  windows, tempo stability over 30 s chunks
+- **Spectral texture** (v4 "picture" approximation): DCT-based statistics
+  of the log-mel spectrogram
+
+The proxy is *calibrated* with a two-point affine fit against two real
+SubmitHub checker results (06_fast: spectral 87 / temporal 92;
+05_stealth_plus: spectral 84 / temporal 44).  The temporal slope is
+regularized (clamped) because a raw two-point fit is implausibly steep —
+the current temporal feature family only partially captures what the
+checker's temporal classifier responds to.  Refit as more anchor points
+become available: `calibrate()` reads a features dict and writes
+`calibration.json`.
+
+`ablation.py` applies each sanitizer stage *alone* to a track and measures
+proxy deltas (raw + calibrated), fingerprint coverage, and quality
+(warp-SNR, masked mean-LSD, spectral angle).  Usage:
+
+```bash
+python -m mmm.research.ablation --input track.wav --out bench_results/ablation
+# --resume keeps already-measured entries; results in ablation.json
+```
+
+Stage outputs are written as WAVs under `ablation/audio/` for listening
+and for spot-checking against the sponsors' sandboxed API.
+
 ## Reading the numbers honestly
 
 - **ΔAI proxy** is a *directional* surrogate. A negative ΔAI proxy means
   the processed clip reads less machine-like to *this proxy* — it is not
   a SubmitHub score and is not evidence about the live checker.
+- **Calibrated deltas** are only as good as the anchor points.  With two
+  anchors the spectral calibration may even be inverted relative to the
+  true relationship; treat calibrated numbers as hypotheses to confirm
+  with more API measurements, not as ground truth.
 - **ΔMatch** is the fraction of original fingerprint hashes destroyed.
   1.0 = complete fingerprint destruction on this surrogate. It says
   nothing about what the sponsor's matcher would do until the sandbox API

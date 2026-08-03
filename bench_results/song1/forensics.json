@@ -1,0 +1,285 @@
+[
+  {
+    "label": "original",
+    "dur_s": 208.7,
+    "spec_ripple_peak_lag_bins": 2,
+    "spec_ripple_strength": 0.9945,
+    "top_spectral_peaks_db": [
+      1.9,
+      1.8,
+      1.6,
+      1.2,
+      1.2
+    ],
+    "top_spectral_peak_freqs": [
+      234.4,
+      210.9,
+      257.8,
+      281.2,
+      304.7
+    ],
+    "frame_autocorr_max": 0.9317,
+    "frame_autocorr_max_lag": 1,
+    "frame_autocorr_mean": 0.3729,
+    "hf_energy_ratio_mean": 0.0475,
+    "hf_energy_ratio_std": 0.0841,
+    "spectral_flatness_mean": 0.0009,
+    "spectral_flatness_std": 0.0054,
+    "mmm_watermark_detector_findings": [],
+    "mmm_detector_raw": {
+      "detected": [
+        {
+          "method": "statistical",
+          "confidence": 0.7,
+          "details": [
+            {
+              "channel": 0,
+              "anomalies": [
+                "low_entropy",
+                "unusual_kurtosis"
+              ],
+              "features": {
+                "skewness": -0.012235153466463089,
+                "kurtosis": 5.148148536682129,
+                "entropy": 3.24729863382798,
+                "diff_std": 0.02388383261859417,
+                "diff_entropy": 1.859735252894933,
+                "spectral_entropy": 11.934076309204102,
+                "spectral_centroid": 86652.23798471915
+              },
+              "type": "statistical_anomaly"
+            }
+          ]
+        },
+        {
+          "method": "amplitude_modulation",
+          "confidence": 0.6,
+          "details": [
+            {
+              "channel": 0,
+              "modulation_peaks": 162,
+              "max_modulation_power": 8162.60791015625,
+              "type": "amplitude_modulation"
+            }
+          ]
+        }
+      ],
+      "method_results": {},
+      "confidence_scores": {},
+      "watermark_count": 2,
+      "overall_confidence": 0.6499999999999999
+    }
+  },
+  {
+    "label": "06_fast",
+    "dur_s": 208.7,
+    "spec_ripple_peak_lag_bins": 2,
+    "spec_ripple_strength": 0.9944,
+    "top_spectral_peaks_db": [
+      1.9,
+      1.8,
+      1.6,
+      1.2,
+      1.2
+    ],
+    "top_spectral_peak_freqs": [
+      234.4,
+      210.9,
+      257.8,
+      281.2,
+      304.7
+    ],
+    "frame_autocorr_max": 0.9355,
+    "frame_autocorr_max_lag": 1,
+    "frame_autocorr_mean": 0.3751,
+    "hf_energy_ratio_mean": 0.0476,
+    "hf_energy_ratio_std": 0.0844,
+    "spectral_flatness_mean": 0.0013,
+    "spectral_flatness_std": 0.0104,
+    "mmm_watermark_detector_findings": [],
+    "mmm_detector_raw": {
+      "detected": [
+        {
+          "method": "statistical",
+          "confidence": 0.7,
+          "details": [
+            {
+              "channel": 0,
+              "anomalies": [
+                "low_entropy",
+                "unusual_kurtosis"
+              ],
+              "features": {
+                "skewness": -0.012238380499184132,
+                "kurtosis": 5.149435520172119,
+                "entropy": 3.2469918943883793,
+                "diff_std": 0.023875029757618904,
+                "diff_entropy": 1.8607651416691973,
+                "spectral_entropy": 11.93407917022705,
+                "spectral_centroid": 86634.61659846752
+              },
+              "type": "statistical_anomaly"
+            }
+          ]
+        },
+        {
+          "method": "amplitude_modulation",
+          "confidence": 0.6,
+          "details": [
+            {
+              "channel": 0,
+              "modulation_peaks": 162,
+              "max_modulation_power": 8162.5107421875,
+              "type": "amplitude_modulation"
+            }
+          ]
+        }
+      ],
+      "method_results": {},
+      "confidence_scores": {},
+      "watermark_count": 2,
+      "overall_confidence": 0.6499999999999999
+    }
+  },
+  {
+    "label": "05_stealth_plus",
+    "dur_s": 208.7,
+    "spec_ripple_peak_lag_bins": 2,
+    "spec_ripple_strength": 0.9932,
+    "top_spectral_peaks_db": [
+      2.2,
+      2.1,
+      1.9,
+      1.5,
+      1.5
+    ],
+    "top_spectral_peak_freqs": [
+      210.9,
+      234.4,
+      257.8,
+      281.2,
+      304.7
+    ],
+    "frame_autocorr_max": 0.9409,
+    "frame_autocorr_max_lag": 1,
+    "frame_autocorr_mean": 0.3899,
+    "hf_energy_ratio_mean": 0.0144,
+    "hf_energy_ratio_std": 0.0437,
+    "spectral_flatness_mean": 0.0015,
+    "spectral_flatness_std": 0.0025,
+    "mmm_watermark_detector_findings": [],
+    "mmm_detector_raw": {
+      "detected": [
+        {
+          "method": "statistical",
+          "confidence": 0.7,
+          "details": [
+            {
+              "channel": 0,
+              "anomalies": [
+                "low_entropy"
+              ],
+              "features": {
+                "skewness": -0.022469719871878624,
+                "kurtosis": 4.162185192108154,
+                "entropy": 3.6559184354547627,
+                "diff_std": 0.013257721439003944,
+                "diff_entropy": 2.156205572018981,
+                "spectral_entropy": 11.484199523925781,
+                "spectral_centroid": 54372.206320500474
+              },
+              "type": "statistical_anomaly"
+            }
+          ]
+        },
+        {
+          "method": "amplitude_modulation",
+          "confidence": 0.6,
+          "details": [
+            {
+              "channel": 0,
+              "modulation_peaks": 334,
+              "max_modulation_power": 6014.8349609375,
+              "type": "amplitude_modulation"
+            }
+          ]
+        }
+      ],
+      "method_results": {},
+      "confidence_scores": {},
+      "watermark_count": 2,
+      "overall_confidence": 0.6499999999999999
+    }
+  },
+  {
+    "label": "04_max",
+    "dur_s": 208.7,
+    "spec_ripple_peak_lag_bins": 2,
+    "spec_ripple_strength": 0.9928,
+    "top_spectral_peaks_db": [
+      2.0,
+      2.0,
+      1.8,
+      1.5,
+      1.4
+    ],
+    "top_spectral_peak_freqs": [
+      210.9,
+      234.4,
+      257.8,
+      281.2,
+      375.0
+    ],
+    "frame_autocorr_max": 0.9235,
+    "frame_autocorr_max_lag": 1,
+    "frame_autocorr_mean": 0.3597,
+    "hf_energy_ratio_mean": 0.0144,
+    "hf_energy_ratio_std": 0.0425,
+    "spectral_flatness_mean": 0.0022,
+    "spectral_flatness_std": 0.0042,
+    "mmm_watermark_detector_findings": [],
+    "mmm_detector_raw": {
+      "detected": [
+        {
+          "method": "statistical",
+          "confidence": 0.7,
+          "details": [
+            {
+              "channel": 0,
+              "anomalies": [
+                "low_entropy",
+                "unusual_kurtosis"
+              ],
+              "features": {
+                "skewness": -0.027199311181902885,
+                "kurtosis": 6.050966739654541,
+                "entropy": 3.3504608101794062,
+                "diff_std": 0.012203855440020561,
+                "diff_entropy": 1.6814212928158647,
+                "spectral_entropy": 11.44700813293457,
+                "spectral_centroid": 52351.75036892312
+              },
+              "type": "statistical_anomaly"
+            }
+          ]
+        },
+        {
+          "method": "amplitude_modulation",
+          "confidence": 0.6,
+          "details": [
+            {
+              "channel": 0,
+              "modulation_peaks": 67,
+              "max_modulation_power": 13955.95703125,
+              "type": "amplitude_modulation"
+            }
+          ]
+        }
+      ],
+      "method_results": {},
+      "confidence_scores": {},
+      "watermark_count": 2,
+      "overall_confidence": 0.6499999999999999
+    }
+  }
+]

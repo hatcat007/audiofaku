@@ -1,0 +1,22 @@
+{
+  "spectral": [
+    -12.46347286425668,
+    93.69097700334237
+  ],
+  "temporal": [
+    300.0,
+    -81.95820542927922
+  ],
+  "anchors": {
+    "06_fast": {
+      "spectral": 87.0,
+      "temporal": 92.0
+    },
+    "05_stealth_plus": {
+      "spectral": 84.0,
+      "temporal": 44.0
+    }
+  },
+  "regularize_max_slope": 300.0,
+  "note": "Fitted on the reported SubmitHub checker results for 06_fast (87/92) and 05_stealth_plus (84/44). Two-point fit; refit as more anchor points become available."
+}

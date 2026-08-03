@@ -1,6 +1,6 @@
 # Offline Robustness Benchmark — SUB-AHA-2026-SEC-001 (offline phase)
 
-**Run date:** 2026-08-03 15:13:53  
+**Run date:** 2026-08-03 17:22:42  
 **Seed:** 42  
 
 > Offline sandbox only. No live SubmitHub/AHA/ACRCloud services were contacted.
@@ -41,11 +41,7 @@ Baseline: AI-likeness proxy **43.81** (spectral 33.86, temporal 53.76); fingerpr
 
 | variant | success | ΔAI proxy | Δ spectral | Δ temporal | fp coverage | ΔMatch | SNR dB | warpSNR dB | meanLSD dB | spec-angle | MFCC cos |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| preserving | ✅ | 1.00 | 6.88 | -4.88 | 0.6736 | 0.3264 | -3.01 | 0.51 | 6.77 | 0.998 | 0.987 |
-| paranoid | ✅ | -0.53 | 7.02 | -8.07 | 0.5874 | 0.4126 | -2.88 | -0.37 | 6.31 | 0.999 | 0.984 |
-| max | ✅ | -0.67 | 6.49 | -7.83 | 0.5934 | 0.4066 | -2.99 | -0.46 | 6.45 | 0.998 | 0.984 |
-| stealth_plus | ✅ | 2.91 | 7.11 | -1.28 | 0.5792 | 0.4208 | -2.93 | -0.21 | 5.95 | 0.999 | 0.984 |
-| fast | ✅ | -0.02 | -0.04 | 0.00 | 0.9971 | 0.0029 | 74.01 | 74.01 | 0.11 | 1.000 | 1.000 |
+| max | ✅ | -0.68 | 6.49 | -7.86 | 0.5937 | 0.4063 | -2.99 | -0.45 | 6.45 | 0.998 | 0.984 |
 
 > ΔAI proxy: negative = processed clip reads *less* machine-like to the surrogate. ΔMatch: fraction of the original fingerprint destroyed (1 − coverage). SNR is sample-aligned and timing-sensitive; warpSNR undoes the estimated time-warp curve before measuring fidelity; meanLSD/spec-angle/MFCC-cos are time-averaged and robust to the sanitizer's intentional micro-timing changes.
 
@@ -53,11 +49,7 @@ Baseline: AI-likeness proxy **43.81** (spectral 33.86, temporal 53.76); fingerpr
 
 | variant | n | success | mean ΔAI proxy | mean Δ spectral | mean Δ temporal | mean fp coverage | mean ΔMatch | mean SNR | mean warpSNR | meanLSD | spec-angle | MFCC cos | mean time (s) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| preserving | 1 | 1.00 | 1.00 | 6.88 | -4.88 | 0.6736 | 0.3264 | -3.01 | 0.51 | 6.77 | 0.998 | 0.987 | 211.40 |
-| paranoid | 1 | 1.00 | -0.53 | 7.02 | -8.07 | 0.5874 | 0.4126 | -2.88 | -0.37 | 6.31 | 0.999 | 0.984 | 313.89 |
-| max | 1 | 1.00 | -0.67 | 6.49 | -7.83 | 0.5934 | 0.4066 | -2.99 | -0.46 | 6.45 | 0.998 | 0.984 | 334.66 |
-| stealth_plus | 1 | 1.00 | 2.91 | 7.11 | -1.28 | 0.5792 | 0.4208 | -2.93 | -0.21 | 5.95 | 0.999 | 0.984 | 320.40 |
-| fast | 1 | 1.00 | -0.02 | -0.04 | 0.00 | 0.9971 | 0.0029 | 74.01 | 74.01 | 0.11 | 1.000 | 1.000 | 0.91 |
+| max | 1 | 1.00 | -0.68 | 6.49 | -7.86 | 0.5937 | 0.4063 | -2.99 | -0.45 | 6.45 | 0.998 | 0.984 | 342.93 |
 
 ## 5. Interpretation and limitations
 
