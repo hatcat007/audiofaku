@@ -44,9 +44,10 @@ def spectral_peak_hashes(
     sr: int,
     n_fft: int = 1024,
     hop: int = 256,
-    peaks_per_frame: int = 5,
-    fanout: int = 4,
-    max_dt_frames: int = 24,
+    peaks_per_frame: int = 4,
+    fanout: int = 3,
+    max_dt_frames: int = 16,
+    max_hashes: int = 1_500_000,
     seed: int | None = None,
 ) -> frozenset:
     """
@@ -57,8 +58,14 @@ def spectral_peak_hashes(
     discriminative for tonal material, where the same few spectral peaks
     persist across frames and otherwise dominate the hash set.
 
-    Returns a frozenset of 32-bit int hashes.  Empty/too-short input
-    yields an empty set.
+    Memory guard: on long tracks the combinatoric hash set can grow to
+    tens of millions of Python ints (multi-GB).  ``max_hashes`` caps the
+    set size — once reached, no further hashes are added.  The cap
+    preserves the fingerprint's *early-track* structure, which is what
+    the coverage metric compares.
+
+    Returns a frozenset of int hashes.  Empty/too-short input yields an
+    empty set.
     """
     audio = np.asarray(audio, dtype=np.float64)
     if audio.ndim > 1:
@@ -124,6 +131,8 @@ def spectral_peak_hashes(
                     | mag_q
                 )
                 hashes.add(h)
+        if len(hashes) >= max_hashes:
+            break
 
     return frozenset(hashes)
 

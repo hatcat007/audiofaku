@@ -54,6 +54,14 @@ def _measure(audio: np.ndarray, sr: int, fingerprint_kwargs: dict) -> dict:
     }
 
 
+def _gc() -> None:
+    """Best-effort memory release between heavy steps (long-track runs can
+    otherwise OOM on small machines)."""
+    import gc
+
+    gc.collect()
+
+
 def run_benchmark(
     inputs: list[Path],
     variant_names,
@@ -114,10 +122,11 @@ def run_benchmark(
                 "processing_time_s": None,
             }
             try:
-                with open(log_path, "w", encoding="utf-8") as log_fh:
+                with open(log_path, "w", encoding="utf-8", buffering=1) as log_fh:
                     with contextlib.redirect_stdout(log_fh), contextlib.redirect_stderr(log_fh):
                         result = vcfg["runner"](input_file, out_path, seed, vcfg["kwargs"])
                 row["processing_time_s"] = round(time.time() - t0, 2)
+                _gc()
                 if result.get("success"):
                     proc_audio, proc_sr = _load_mono(out_path)
                     if proc_sr != orig_sr:
@@ -126,6 +135,7 @@ def run_benchmark(
                     post = _measure(proc_audio, proc_sr, fingerprint_kwargs)
                     q = qual.quality_metrics(orig_audio, proc_audio, orig_sr)
                     coverage = fp.match_coverage(baseline["hashes"], post["hashes"])
+                    _gc()
 
                     row.update(
                         {
