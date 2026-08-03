@@ -190,4 +190,8 @@ reports/
 analysis/
 
 # Benchmark harness outputs (mmm.research)
-bench_results/
+bench_results/*
+# ...but keep the song1 track benchmark deliverables tracked
+!bench_results/song1/
+!bench_results/song1/report.md
+!bench_results/song1/results.json
