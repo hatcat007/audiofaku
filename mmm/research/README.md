@@ -85,14 +85,37 @@ ICLR 2025):
 - **Spectral texture** (v4 "picture" approximation): DCT-based statistics
   of the log-mel spectrogram
 
-The proxy is *calibrated* with a two-point affine fit against two real
-SubmitHub checker results (06_fast: spectral 87 / temporal 92;
-05_stealth_plus: spectral 84 / temporal 44).  The temporal slope is
-regularized (clamped) because a raw two-point fit is implausibly steep —
-the current temporal feature family only partially captures what the
-checker's temporal classifier responds to.  Refit as more anchor points
-become available: `calibrate()` reads a features dict and writes
-`calibration.json`.
+The proxy is *calibrated* with piecewise-linear interpolation through
+real SubmitHub checker results (3 anchors, 2026-08-03):
+
+| file | spectral (Pure AI) | temporal (Pure AI) |
+|---|---|---|
+| 06_fast | 87 | 92 |
+| 03_paranoid | 86 | 32 |
+| 05_stealth_plus | 84 | 44 |
+
+Refit as more anchor points become available — either by editing
+`ANCHORS` in `proxy_v2.py`, or from the CLI:
+
+```bash
+python -m mmm.research.proxy_v2 --features bench_results/song1/features_all.json \
+    --anchors anchors.json     # {"06_fast": {"spectral": 87, "temporal": 92}, ...}
+```
+
+The three anchors already show two important properties of the real
+checker:
+
+- **spectral is nearly flat** across all processing variants (84-87)
+  even though raw spectral features spread wide — the spectral classifier
+  keys on something the hand-crafted features do not capture.
+- **temporal is steep and nonlinear** (92 unprocessed -> ~32-44 with
+  humanization-style processing), and the raw temporal ordering matches
+  (paranoid < stealth_plus < fast).
+
+Calibration caveats: interpolation between anchors, clamping outside; not
+validated on unseen files yet; the single-stage ablation pack
+(`ablation_audio.zip`) run through the API is the fastest way to add
+anchors and pin down the mapping.
 
 `ablation.py` applies each sanitizer stage *alone* to a track and measures
 proxy deltas (raw + calibrated), fingerprint coverage, and quality

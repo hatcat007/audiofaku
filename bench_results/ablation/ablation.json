@@ -85,7 +85,7 @@
         }
       },
       "d_overall": 0.0,
-      "d_spectral": -0.0,
+      "d_spectral": 0.0,
       "d_temporal": 0.0,
       "d_raw_spectral": 0.0,
       "d_raw_temporal": 0.0,
@@ -152,9 +152,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -0.91,
-      "d_spectral": -0.52,
-      "d_temporal": -1.29,
+      "d_overall": -3.57,
+      "d_spectral": -0.18,
+      "d_temporal": -6.97,
       "d_raw_spectral": 4.2,
       "d_raw_temporal": -0.43,
       "fingerprint_coverage": 0.8805,
@@ -220,9 +220,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 1.49,
-      "d_spectral": 1.84,
-      "d_temporal": 1.14,
+      "d_overall": 0.45,
+      "d_spectral": 0.28,
+      "d_temporal": 0.61,
       "d_raw_spectral": -14.76,
       "d_raw_temporal": 0.38,
       "fingerprint_coverage": 0.9569,
@@ -288,9 +288,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.01,
+      "d_overall": 0.08,
       "d_spectral": 0.0,
-      "d_temporal": 0.03,
+      "d_temporal": 0.16,
       "d_raw_spectral": -0.01,
       "d_raw_temporal": 0.01,
       "fingerprint_coverage": 1.0,
@@ -356,9 +356,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -3.02,
-      "d_spectral": -0.87,
-      "d_temporal": -5.16,
+      "d_overall": -14.08,
+      "d_spectral": -0.3,
+      "d_temporal": -27.86,
       "d_raw_spectral": 6.98,
       "d_raw_temporal": -1.72,
       "fingerprint_coverage": 0.6538,
@@ -424,9 +424,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.84,
-      "d_spectral": -0.72,
-      "d_temporal": 2.4,
+      "d_overall": 0.18,
+      "d_spectral": -0.25,
+      "d_temporal": 0.61,
       "d_raw_spectral": 5.79,
       "d_raw_temporal": 0.8,
       "fingerprint_coverage": 0.9328,
@@ -492,9 +492,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -1.86,
-      "d_spectral": 0.94,
-      "d_temporal": -4.65,
+      "d_overall": -12.41,
+      "d_spectral": 0.28,
+      "d_temporal": -25.11,
       "d_raw_spectral": -7.51,
       "d_raw_temporal": -1.55,
       "fingerprint_coverage": 0.9618,
@@ -560,9 +560,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.48,
-      "d_spectral": -0.29,
-      "d_temporal": 1.26,
+      "d_overall": 0.26,
+      "d_spectral": -0.1,
+      "d_temporal": 0.61,
       "d_raw_spectral": 2.31,
       "d_raw_temporal": 0.42,
       "fingerprint_coverage": 0.8918,
@@ -628,9 +628,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -0.17,
-      "d_spectral": -0.47,
-      "d_temporal": 0.12,
+      "d_overall": 0.23,
+      "d_spectral": -0.16,
+      "d_temporal": 0.61,
       "d_raw_spectral": 3.79,
       "d_raw_temporal": 0.04,
       "fingerprint_coverage": 1.0,
@@ -696,9 +696,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -0.05,
-      "d_spectral": -0.19,
-      "d_temporal": 0.09,
+      "d_overall": 0.21,
+      "d_spectral": -0.07,
+      "d_temporal": 0.48,
       "d_raw_spectral": 1.52,
       "d_raw_temporal": 0.03,
       "fingerprint_coverage": 1.0,
@@ -764,9 +764,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.11,
-      "d_spectral": -0.01,
-      "d_temporal": 0.24,
+      "d_overall": 0.3,
+      "d_spectral": 0.0,
+      "d_temporal": 0.61,
       "d_raw_spectral": 0.05,
       "d_raw_temporal": 0.08,
       "fingerprint_coverage": 0.9966,
@@ -832,9 +832,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.04,
-      "d_spectral": -0.2,
-      "d_temporal": 0.27,
+      "d_overall": 0.27,
+      "d_spectral": -0.07,
+      "d_temporal": 0.61,
       "d_raw_spectral": 1.57,
       "d_raw_temporal": 0.09,
       "fingerprint_coverage": 0.9945,
@@ -900,9 +900,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.06,
-      "d_spectral": -0.0,
-      "d_temporal": 0.12,
+      "d_overall": 0.3,
+      "d_spectral": 0.0,
+      "d_temporal": 0.61,
       "d_raw_spectral": 0.0,
       "d_raw_temporal": 0.04,
       "fingerprint_coverage": 0.998,
@@ -968,9 +968,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.03,
-      "d_spectral": -0.0,
-      "d_temporal": 0.06,
+      "d_overall": 0.16,
+      "d_spectral": 0.0,
+      "d_temporal": 0.32,
       "d_raw_spectral": 0.0,
       "d_raw_temporal": 0.02,
       "fingerprint_coverage": 1.0,
@@ -1036,9 +1036,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -0.69,
-      "d_spectral": 0.72,
-      "d_temporal": -2.1,
+      "d_overall": -5.55,
+      "d_spectral": 0.25,
+      "d_temporal": -11.34,
       "d_raw_spectral": -5.77,
       "d_raw_temporal": -0.7,
       "fingerprint_coverage": 0.8786,
@@ -1104,9 +1104,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.2,
+      "d_overall": 0.3,
       "d_spectral": 0.0,
-      "d_temporal": 0.39,
+      "d_temporal": 0.61,
       "d_raw_spectral": -0.01,
       "d_raw_temporal": 0.13,
       "fingerprint_coverage": 0.9968,
@@ -1172,8 +1172,8 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -0.18,
-      "d_spectral": -0.37,
+      "d_overall": -0.06,
+      "d_spectral": -0.13,
       "d_temporal": 0.0,
       "d_raw_spectral": 2.98,
       "d_raw_temporal": 0.0,
@@ -1240,9 +1240,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": 0.26,
-      "d_spectral": -0.56,
-      "d_temporal": 1.08,
+      "d_overall": 0.21,
+      "d_spectral": -0.19,
+      "d_temporal": 0.61,
       "d_raw_spectral": 4.47,
       "d_raw_temporal": 0.36,
       "fingerprint_coverage": 0.9621,
@@ -1308,9 +1308,9 @@
           "sh_tempo_chunk_std": 0.0
         }
       },
-      "d_overall": -0.2,
-      "d_spectral": 0.31,
-      "d_temporal": -0.72,
+      "d_overall": -1.9,
+      "d_spectral": 0.1,
+      "d_temporal": -3.89,
       "d_raw_spectral": -2.46,
       "d_raw_temporal": -0.24,
       "fingerprint_coverage": 0.9359,

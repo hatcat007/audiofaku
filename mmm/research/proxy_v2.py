@@ -1,19 +1,31 @@
 """
-Calibrated AI-likeness proxy v2 — SH-family features + two-point affine
+Calibrated AI-likeness proxy v2 — SH-family features + piecewise-linear
 calibration against real SubmitHub checker results.
 
-Anchors (measured with the SubmitHub AI Song Checker, per the researcher's
+Anchors (measured with the SubmitHub AI Song Checker, researcher's
 reports of 2026-08-03):
 
     file             spectral (Pure AI)   temporal (Pure AI)
     06_fast          87%                  92%
-    05_stealth_plus  84%                  44% (hybrid 51%)
+    03_paranoid      86%                  32%
+    05_stealth_plus  84%                  44%
 
-Because only two anchor points are available, each sub-score is an affine
-mapping (y = a*x + b) fitted exactly through its two anchors, applied to a
-raw machine-likeness mean of SH-family terms.  This reproduces the
-checker's sub-scores at the anchors and interpolates elsewhere; it is NOT
-validated on unseen files yet (more anchors -> refit).
+Calibration is a piecewise-linear interpolation of raw machine-likeness
+mean -> checker sub-score through the anchor points (monotone, clamped at
+the edges).  Three anchors are enough to see that the checker's response
+is *nonlinear and family-specific*:
+
+- spectral: essentially flat across all processing (84-87) even though
+  raw spectral features spread wide (0.54-0.78) — the real spectral
+  classifier keys on something our hand-crafted features do not capture.
+- temporal: steep near the unprocessed track (92), dropping to ~32-44 for
+  any humanization-style processing — matching the raw ordering
+  (paranoid < stealth_plus < fast).
+
+The calibration reproduces the anchors exactly and interpolates between
+them; outside the anchor range it clamps to the edge value.  It is NOT
+validated on unseen files yet — more anchors (e.g. the single-stage
+ablation pack) will improve it.
 
 Directions: each term maps to machine-likeness in [0,1] where 1 means
 "more machine-like".  Reference ranges are set from the observed values
@@ -22,6 +34,7 @@ on the calibration files and from the documented feature semantics.
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -85,22 +98,16 @@ _TEMPORAL_TERMS = [
     ("sh_tempo_chunk_std", False, (0.05, 3.0), 1.5),
 ]
 
-# Calibrated affine maps: raw_mean -> checker sub-score.
-# Fit through anchors: fast (spec 87, temp 92), stealth_plus (spec 84, temp 44).
-# The slope is REGULARIZED (clamped to +-REGULARIZE_MAX_SLOPE): a raw
-# 2-point fit on the temporal side yields an implausibly steep map
-# (slope ~1600, which saturates every file to 0 or 100) because the
-# current temporal feature family captures only part of what the real
-# checker's temporal classifier responds to (documented: "tempo, phase and
-# timing alignment").  The clamped map reproduces the anchors exactly at
-# their midpoint and degrades gracefully between them.
-_REGULARIZE_MAX_SLOPE = 300.0
-
-_SPECTRAL_A, _SPECTRAL_B = None, None  # fitted by calibrate_proxy
-_TEMPORAL_A, _TEMPORAL_B = None, None
+# Piecewise-linear mapping tables: raw (0-1) -> checker sub-score (0-100).
+# Built by calibrate(); loaded from calibration.json by _load_calibration().
+_SPEC_RAWS: list[float] = []
+_SPEC_REALS: list[float] = []
+_TEMP_RAWS: list[float] = []
+_TEMP_REALS: list[float] = []
 
 ANCHORS = {
     "06_fast": {"spectral": 87.0, "temporal": 92.0},
+    "03_paranoid": {"spectral": 86.0, "temporal": 32.0},
     "05_stealth_plus": {"spectral": 84.0, "temporal": 44.0},
 }
 
@@ -120,75 +127,66 @@ def raw_subscore(features: dict, kind: str) -> float:
     return float(np.average(vals, weights=weights))
 
 
+def _sorted_pairs(pairs: list[tuple[float, float]]) -> tuple[list[float], list[float]]:
+    pairs = sorted(pairs, key=lambda p: p[0])
+    return [p[0] for p in pairs], [p[1] for p in pairs]
+
+
 def calibrate(calib_features: dict) -> dict:
     """
-    Fit the two affine maps from raw sub-scores to the anchor checker
-    scores.  Returns {"spectral": (a, b), "temporal": (a, b)} and stores
-    them module-globally.
+    Build piecewise-linear anchor maps from raw sub-scores to the anchor
+    checker scores.  Persists to calibration.json.  Returns
+    {"spectral": {"raw": [...], "real": [...]}, "temporal": {...}}.
     """
-    global _SPECTRAL_A, _SPECTRAL_B, _TEMPORAL_A, _TEMPORAL_B
+    global _SPEC_RAWS, _SPEC_REALS, _TEMP_RAWS, _TEMP_REALS
 
-    def fit(kind: str):
-        xs, ys = [], []
-        for name, targets in ANCHORS.items():
-            f = calib_features.get(name)
-            if f is None:
-                continue
-            xs.append(raw_subscore(f, kind))
-            ys.append(targets[kind])
-        if len(xs) == 2 and xs[1] != xs[0]:
-            a = (ys[1] - ys[0]) / (xs[1] - xs[0])
-            # regularize: clamp slope, refit intercept through the anchors'
-            # midpoint so the map still passes near both anchor points
-            if abs(a) > _REGULARIZE_MAX_SLOPE:
-                a = _REGULARIZE_MAX_SLOPE if a > 0 else -_REGULARIZE_MAX_SLOPE
-                x_mid = 0.5 * (xs[0] + xs[1])
-                y_mid = 0.5 * (ys[0] + ys[1])
-                b = y_mid - a * x_mid
-            else:
-                b = ys[0] - a * xs[0]
-        else:
-            a, b = 1.0, 0.0
-        return a, b
+    spec_pairs: list[tuple[float, float]] = []
+    temp_pairs: list[tuple[float, float]] = []
+    used_anchors: dict[str, dict] = {}
+    for name, targets in ANCHORS.items():
+        f = calib_features.get(name)
+        if f is None:
+            continue
+        spec_pairs.append((raw_subscore(f, "spectral"), float(targets["spectral"])))
+        temp_pairs.append((raw_subscore(f, "temporal"), float(targets["temporal"])))
+        used_anchors[name] = targets
 
-    _SPECTRAL_A, _SPECTRAL_B = fit("spectral")
-    _TEMPORAL_A, _TEMPORAL_B = fit("temporal")
-    _CALIBRATION_PATH.write_text(
-        json.dumps(
-            {
-                "spectral": [_SPECTRAL_A, _SPECTRAL_B],
-                "temporal": [_TEMPORAL_A, _TEMPORAL_B],
-                "anchors": ANCHORS,
-                "regularize_max_slope": _REGULARIZE_MAX_SLOPE,
-                "note": "Fitted on the reported SubmitHub checker results for "
-                "06_fast (87/92) and 05_stealth_plus (84/44). Two-point fit; "
-                "refit as more anchor points become available.",
-            },
-            indent=2,
-        )
-    )
-    return {
-        "spectral": (_SPECTRAL_A, _SPECTRAL_B),
-        "temporal": (_TEMPORAL_A, _TEMPORAL_B),
+    _SPEC_RAWS, _SPEC_REALS = _sorted_pairs(spec_pairs)
+    _TEMP_RAWS, _TEMP_REALS = _sorted_pairs(temp_pairs)
+
+    payload = {
+        "spectral": {"raw": _SPEC_RAWS, "real": _SPEC_REALS},
+        "temporal": {"raw": _TEMP_RAWS, "real": _TEMP_REALS},
+        "anchors": used_anchors,
+        "note": "Piecewise-linear interpolation through the reported SubmitHub "
+        "checker results (fast 87/92, paranoid 86/32, stealth_plus 84/44). "
+        "Interpolates between anchors; clamps outside. Refit as more anchor "
+        "points become available.",
     }
+    _CALIBRATION_PATH.write_text(json.dumps(payload, indent=2))
+    return payload
 
 
 def _load_calibration() -> None:
     """Load persisted calibration params if present (idempotent)."""
-    global _SPECTRAL_A, _SPECTRAL_B, _TEMPORAL_A, _TEMPORAL_B
-    if _CALIBRATION_PATH.exists() and _SPECTRAL_A is None:
+    global _SPEC_RAWS, _SPEC_REALS, _TEMP_RAWS, _TEMP_REALS
+    if _CALIBRATION_PATH.exists() and not _SPEC_RAWS:
         try:
             data = json.loads(_CALIBRATION_PATH.read_text())
-            _SPECTRAL_A, _SPECTRAL_B = data["spectral"]
-            _TEMPORAL_A, _TEMPORAL_B = data["temporal"]
+            _SPEC_RAWS = data["spectral"]["raw"]
+            _SPEC_REALS = data["spectral"]["real"]
+            _TEMP_RAWS = data["temporal"]["raw"]
+            _TEMP_REALS = data["temporal"]["real"]
         except Exception:
             pass
 
 
-def _apply(a: float | None, b: float | None, raw: float) -> float:
-    if a is None or b is None:
+def _apply(raw: float, raws: list[float], reals: list[float]) -> float:
+    if not raws:
         return round(100.0 * raw, 2)
-    return round(float(np.clip(a * raw + b, 0.0, 100.0)), 2)
+    xp = np.asarray(raws, dtype=np.float64)
+    fp = np.asarray(reals, dtype=np.float64)
+    return round(float(np.interp(raw, xp, fp)), 2)
 
 
 def score_ai_likeness(features: dict) -> dict:
@@ -200,8 +198,8 @@ def score_ai_likeness(features: dict) -> dict:
     _load_calibration()
     raw_spec = raw_subscore(features, "spectral")
     raw_temp = raw_subscore(features, "temporal")
-    spec = _apply(_SPECTRAL_A, _SPECTRAL_B, raw_spec)
-    temp = _apply(_TEMPORAL_A, _TEMPORAL_B, raw_temp)
+    spec = _apply(raw_spec, _SPEC_RAWS, _SPEC_REALS)
+    temp = _apply(raw_temp, _TEMP_RAWS, _TEMP_REALS)
     return {
         "overall": round(0.5 * spec + 0.5 * temp, 2),
         "spectral": spec,
@@ -226,3 +224,59 @@ def extract_all(path_or_audio, sr: int | None = None) -> dict:
     f = extract_features(audio, sr)
     f.update(extract_sh_features(audio, sr))
     return f
+
+
+def main(argv=None) -> int:
+    """
+    CLI: refit the calibration from a features JSON + an anchors JSON, and
+    print calibrated scores for every file in the features file.
+
+        python -m mmm.research.proxy_v2 \
+            --features bench_results/song1/features_all.json \
+            --anchors anchors.json
+
+    anchors.json format: {"06_fast": {"spectral": 87, "temporal": 92}, ...}
+    """
+    ap = argparse.ArgumentParser(prog="python -m mmm.research.proxy_v2")
+    ap.add_argument("--features", required=True, help="features JSON (extract_all output)")
+    ap.add_argument(
+        "--anchors",
+        default=None,
+        help="anchors JSON {name: {spectral, temporal}}; default: module ANCHORS",
+    )
+    args = ap.parse_args(argv)
+
+    with open(args.features, encoding="utf-8") as fh:
+        feats = json.load(fh)
+    for name in feats:
+        for k, v in feats[name].items():
+            if isinstance(v, str):
+                feats[name][k] = None if v == "None" else float(v)
+
+    if args.anchors:
+        with open(args.anchors, encoding="utf-8") as fh:
+            custom = json.load(fh)
+        for name in list(ANCHORS):
+            ANCHORS.pop(name, None)
+        for name, targets in custom.items():
+            ANCHORS[name] = {"spectral": float(targets["spectral"]),
+                             "temporal": float(targets["temporal"])}
+
+    cal = calibrate(feats)
+    print("calibration saved to", _CALIBRATION_PATH)
+    print("spectral map:", cal["spectral"])
+    print("temporal map:", cal["temporal"])
+    print("\ncalibrated scores:")
+    for name, f in feats.items():
+        s = score_ai_likeness(f)
+        print(
+            f"  {name:18s} overall={s['overall']:6.1f}  spectral={s['spectral']:6.1f}  "
+            f"temporal={s['temporal']:6.1f}  (raw {s['raw_spectral']:4.0f}/{s['raw_temporal']:4.0f})"
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
