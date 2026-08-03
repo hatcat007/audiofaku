@@ -86,13 +86,14 @@ ICLR 2025):
   of the log-mel spectrogram
 
 The proxy is *calibrated* with piecewise-linear interpolation through
-real SubmitHub checker results (3 anchors, 2026-08-03):
+real SubmitHub checker results (4 anchors, 2026-08-03):
 
-| file | spectral (Pure AI) | temporal (Pure AI) |
-|---|---|---|
-| 06_fast | 87 | 92 |
-| 03_paranoid | 86 | 32 |
-| 05_stealth_plus | 84 | 44 |
+| file | spectral (Pure AI) | temporal (Pure AI) | used for |
+|---|---|---|---|
+| 06_fast | 87 | 92 | temporal fit |
+| 03_paranoid | 86 | 32 | temporal fit |
+| 05_stealth_plus | 84 | 44 | temporal fit |
+| ablation_tempo_drift | 90 | 34 | **excluded from fit** (see below) |
 
 Refit as more anchor points become available — either by editing
 `ANCHORS` in `proxy_v2.py`, or from the CLI:
@@ -102,20 +103,38 @@ python -m mmm.research.proxy_v2 --features bench_results/song1/features_all.json
     --anchors anchors.json     # {"06_fast": {"spectral": 87, "temporal": 92}, ...}
 ```
 
-The three anchors already show two important properties of the real
-checker:
+### What the anchors + ablation established
 
-- **spectral is nearly flat** across all processing variants (84-87)
-  even though raw spectral features spread wide — the spectral classifier
-  keys on something the hand-crafted features do not capture.
-- **temporal is steep and nonlinear** (92 unprocessed -> ~32-44 with
-  humanization-style processing), and the raw temporal ordering matches
-  (paranoid < stealth_plus < fast).
+1. **Spectral is pinned, not fitted.** The real spectral score stayed in a
+   narrow band (84-90) across drastically different processing, and every
+   hand-crafted spectral feature is *anti-correlated* with it (Spearman
+   -0.6..-1.0).  The checker's spectral side (v4: "turning each song into
+   a picture") keys on spectrogram-image texture that simple statistics
+   do not capture.  The proxy therefore reports a pinned band (mean of
+   the anchors) instead of pretending a fit.
+2. **Temporal: 3 sign-consistent features.** On the anchor set, only
+   `beat_cv`, `sh_rms_kurt`, `rms_skew` had machine-likeness terms
+   positively correlated with the real temporal score (Spearman +0.8).
+   Candidates like onset regularity, ZCR stability, section correlation,
+   and tempo stability were inverted or noise on this corpus.
+3. **tempo_drift is a documented failure case.** The real checker dropped
+   temporal 92 -> 34 for the single tempo-drift stage, but no hand-crafted
+   temporal feature ranks it correctly (beat CV, RMS dynamics, 30 s tempo
+   stability, and beat-phase drift all fail; the fine-grained tempo
+   estimator's noise floor (~17 BPM) swamps the ~1 BPM drift).  The
+   fingerprint ΔMatch (0.225, the largest of any stage) is the best
+   in-tool predictor for drift-like stages.  This anchor is excluded from
+   the temporal fit and reported as a limitation.
+4. **Stage ranking (calibrated temporal deltas, 3-feature model):**
+   humanization -48, spectral_clean -19.5, transient_shift -18.4,
+   tempo_drift -16.8, micro_warp -6.5, fingerprint_removal -1.7,
+   analog_warmth/clarity_tilt ~0.  (Unanchored stages are predictions,
+   not measurements.)
 
-Calibration caveats: interpolation between anchors, clamping outside; not
-validated on unseen files yet; the single-stage ablation pack
-(`ablation_audio.zip`) run through the API is the fastest way to add
-anchors and pin down the mapping.
+Calibration caveats: interpolation between anchors, clamping outside; the
+temporal map is steep (raw axis is compressed), so small raw changes
+amplify; not validated on unseen files yet — the single-stage ablation
+pack run through the API is the fastest way to add anchors.
 
 `ablation.py` applies each sanitizer stage *alone* to a track and measures
 proxy deltas (raw + calibrated), fingerprint coverage, and quality

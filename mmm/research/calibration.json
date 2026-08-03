@@ -2,20 +2,22 @@
   "spectral": {
     "raw": [
       0.5368469186891764,
+      0.63824675153059,
       0.7695223641434216,
       0.7775502950814449
     ],
     "real": [
       87.0,
+      90.0,
       86.0,
       84.0
     ]
   },
   "temporal": {
     "raw": [
-      0.4524095358394408,
-      0.4850438417695537,
-      0.5146775277589745
+      0.5285702926444956,
+      0.6705434987271156,
+      0.7294272997821515
     ],
     "real": [
       32.0,
@@ -26,15 +28,18 @@
   "anchors": {
     "06_fast": {
       "spectral": 87.0,
-      "temporal": 92.0
+      "temporal": 92.0,
+      "note": "unprocessed (fast = tag strip only)"
     },
     "03_paranoid": {
       "spectral": 86.0,
-      "temporal": 32.0
+      "temporal": 32.0,
+      "note": "paranoid variant"
     },
     "05_stealth_plus": {
       "spectral": 84.0,
-      "temporal": 44.0
+      "temporal": 44.0,
+      "note": "stealth-plus variant"
     }
   },
   "note": "Piecewise-linear interpolation through the reported SubmitHub checker results (fast 87/92, paranoid 86/32, stealth_plus 84/44). Interpolates between anchors; clamps outside. Refit as more anchor points become available."

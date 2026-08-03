@@ -78,24 +78,18 @@ _SPECTRAL_TERMS = [
 ]
 
 _TEMPORAL_TERMS = [
+    # Data-selected on 4 real-checker anchors (2026-08-03): only features
+    # whose machine-likeness term correlates POSITIVELY (Spearman > 0.5)
+    # with the real temporal score are kept.  beat_cv / sh_rms_kurt /
+    # rms_skew all had term-rho = +0.80; the other candidates
+    # (onset_regularity, sh_zcr_std, sh_section_corr_60, sh_tempo_chunk_std,
+    # sh_rms_std, tempo-chunk mean) were inverted or noise on this corpus.
     # Irregular beat (high CV) => human-like.
-    ("beat_cv", False, (0.005, 0.15), 1.2),
-    # High RMS dynamics => human-like.
-    ("sh_rms_std", False, (0.03, 0.22), 1.0),
-    ("sh_rms_kurt", False, (0.0, 5.0), 0.7),
-    ("rms_skew", False, (0.1, 2.5), 0.5),
-    # Onset regularity: high CV => human-like.
-    ("onset_regularity", False, (0.1, 0.9), 0.8),
-    # ZCR stability: low std => machine-like.
-    ("sh_zcr_std", False, (0.01, 0.12), 0.6),
-    # Section-to-section correlation: highly repetitive => machine-like.
-    # (SONICS long-range insight; reported separately and included with
-    #  modest weight since the sanitizer's uniform processing can move it
-    #  the wrong way.)
-    ("sh_section_corr_60", True, (0.90, 1.00), 0.5),
-    # Tempo stability across 30 s chunks: stable tempo => machine-like.
-    # (checker temporal = "tempo, phase and timing alignment")
-    ("sh_tempo_chunk_std", False, (0.05, 3.0), 1.5),
+    ("beat_cv", False, (0.005, 0.15), 1.0),
+    # RMS kurtosis: high (peaky dynamics) => human-like.
+    ("sh_rms_kurt", False, (0.0, 5.0), 1.0),
+    # RMS skew: high => human-like.
+    ("rms_skew", False, (0.1, 2.5), 1.0),
 ]
 
 # Piecewise-linear mapping tables: raw (0-1) -> checker sub-score (0-100).
@@ -106,9 +100,19 @@ _TEMP_RAWS: list[float] = []
 _TEMP_REALS: list[float] = []
 
 ANCHORS = {
-    "06_fast": {"spectral": 87.0, "temporal": 92.0},
-    "03_paranoid": {"spectral": 86.0, "temporal": 32.0},
-    "05_stealth_plus": {"spectral": 84.0, "temporal": 44.0},
+    "06_fast": {"spectral": 87.0, "temporal": 92.0, "note": "unprocessed (fast = tag strip only)"},
+    "03_paranoid": {"spectral": 86.0, "temporal": 32.0, "note": "paranoid variant"},
+    "05_stealth_plus": {"spectral": 84.0, "temporal": 44.0, "note": "stealth-plus variant"},
+    "ablation_tempo_drift": {
+        "spectral": 90.0,
+        "temporal": 34.0,
+        "note": "single-stage tempo drift: real temporal dropped 92->34 but NO "
+        "hand-crafted temporal feature captures it (beat CV, RMS dynamics, "
+        "tempo stability, beat-phase drift all fail to rank it). Excluded "
+        "from the temporal fit; the fingerprint DeltaMatch (~0.225) is the "
+        "best in-tool predictor for drift-like stages.",
+        "exclude_temporal": True,
+    },
 }
 
 
@@ -148,6 +152,8 @@ def calibrate(calib_features: dict) -> dict:
         if f is None:
             continue
         spec_pairs.append((raw_subscore(f, "spectral"), float(targets["spectral"])))
+        if targets.get("exclude_temporal"):
+            continue
         temp_pairs.append((raw_subscore(f, "temporal"), float(targets["temporal"])))
         used_anchors[name] = targets
 
@@ -162,6 +168,37 @@ def calibrate(calib_features: dict) -> dict:
         "checker results (fast 87/92, paranoid 86/32, stealth_plus 84/44). "
         "Interpolates between anchors; clamps outside. Refit as more anchor "
         "points become available.",
+    }
+    _CALIBRATION_PATH.write_text(json.dumps(payload, indent=2))
+    return payload
+
+
+def calibrate_from_raw(points: dict) -> dict:
+    """
+    Build piecewise-linear anchor maps directly from raw sub-scores
+    (0-100 scale) + real checker sub-scores.  Accepts ablation-style
+    anchors where only the raw proxy scores are known:
+
+        points = {"ablation_tempo_drift": {
+            "raw_spec": 63.0, "raw_temp": 51.0, "spec": 90.0, "temp": 34.0}}
+
+    Persists to calibration.json (same format as calibrate()).
+    """
+    global _SPEC_RAWS, _SPEC_REALS, _TEMP_RAWS, _TEMP_REALS
+
+    spec_pairs = [(float(p["raw_spec"]) / 100.0, float(p["spec"])) for p in points.values()]
+    temp_pairs = [(float(p["raw_temp"]) / 100.0, float(p["temp"])) for p in points.values()]
+
+    _SPEC_RAWS, _SPEC_REALS = _sorted_pairs(spec_pairs)
+    _TEMP_RAWS, _TEMP_REALS = _sorted_pairs(temp_pairs)
+
+    payload = {
+        "spectral": {"raw": _SPEC_RAWS, "real": _SPEC_REALS},
+        "temporal": {"raw": _TEMP_RAWS, "real": _TEMP_REALS},
+        "anchors": points,
+        "note": "Piecewise-linear interpolation through real SubmitHub checker "
+        "results. Interpolates between anchors; clamps outside. Refit as more "
+        "anchor points become available.",
     }
     _CALIBRATION_PATH.write_text(json.dumps(payload, indent=2))
     return payload
@@ -198,7 +235,13 @@ def score_ai_likeness(features: dict) -> dict:
     _load_calibration()
     raw_spec = raw_subscore(features, "spectral")
     raw_temp = raw_subscore(features, "temporal")
-    spec = _apply(raw_spec, _SPEC_RAWS, _SPEC_REALS)
+    # Spectral: pinned-band model.  All hand-crafted spectral features are
+    # ANTI-correlated with the real checker's spectral score (Spearman
+    # -0.6..-1.0 across 4 anchors) while the real score stays in a narrow
+    # band (84-90) across drastically different processing.  The honest
+    # model is: report the observed band (anchor mean +/- range), do not
+    # pretend a fit.  raw_spectral is still reported for direction.
+    spec = round(float(np.mean(_SPEC_REALS)), 1) if _SPEC_REALS else round(100.0 * raw_spec, 2)
     temp = _apply(raw_temp, _TEMP_RAWS, _TEMP_REALS)
     return {
         "overall": round(0.5 * spec + 0.5 * temp, 2),
@@ -206,6 +249,9 @@ def score_ai_likeness(features: dict) -> dict:
         "temporal": temp,
         "raw_spectral": round(100.0 * raw_spec, 2),
         "raw_temporal": round(100.0 * raw_temp, 2),
+        "spectral_note": "pinned-band: real spectral stayed 84-90 across all "
+        "processing; hand-crafted spectral features are anti-correlated with "
+        "the real spectral score on the 4 anchors, so no fit is attempted.",
         "terms": {
             key: _term(features, key, high, lo, hi)
             for key, high, (lo, hi), _ in _SPECTRAL_TERMS + _TEMPORAL_TERMS
