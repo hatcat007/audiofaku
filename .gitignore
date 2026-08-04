@@ -196,6 +196,7 @@ bench_results/*
 !bench_results/song1/report.md
 !bench_results/song1/results.json
 !bench_results/song1/features_all.json
+!bench_results/ROBUSTNESS_BRIEF.md
 !bench_results/ablation/
 !bench_results/ablation/ablation.json
 !bench_results/ablation/ablation_audio.zip
