@@ -1,0 +1,58 @@
+[
+  {
+    "name": "06_fast",
+    "raw_spec": 53.684691868917646,
+    "raw_temp": 72.94272997821516,
+    "real_spec": 87,
+    "real_temp": 92
+  },
+  {
+    "name": "02_preserving",
+    "raw_spec": 72.44114107469328,
+    "raw_temp": 57.55107101803082,
+    "real_spec": 87,
+    "real_temp": 19
+  },
+  {
+    "name": "03_paranoid",
+    "raw_spec": 76.95223641434215,
+    "raw_temp": 52.857029264449565,
+    "real_spec": 86,
+    "real_temp": 32
+  },
+  {
+    "name": "05_stealth_plus",
+    "raw_spec": 77.75502950814449,
+    "raw_temp": 67.05434987271155,
+    "real_spec": 84,
+    "real_temp": 44
+  },
+  {
+    "name": "ablation_tempo_drift",
+    "raw_spec": 63.82,
+    "raw_temp": 70.88,
+    "real_spec": 90,
+    "real_temp": 34
+  },
+  {
+    "name": "ablation_humanization",
+    "raw_spec": 67.22,
+    "raw_temp": 67.06,
+    "real_spec": 89,
+    "real_temp": 78
+  },
+  {
+    "name": "ablation_spectral_clean",
+    "raw_spec": 64.44,
+    "raw_temp": 70.55,
+    "real_spec": 89,
+    "real_temp": 88
+  },
+  {
+    "name": "ablation_transient_shift",
+    "raw_spec": 54.47,
+    "raw_temp": 70.68,
+    "real_spec": 89,
+    "real_temp": 87
+  }
+]
